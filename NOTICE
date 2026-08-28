@@ -10,6 +10,11 @@ Third-party assets
 
 Logo and application icons
 
+  The icons currently in src/App/public/icons are original placeholder
+  artwork, drawn by src/App/tools/generate-icons.py. They are covered by
+  the Apache 2.0 licence of this repository. The Twemoji-derived logo
+  described below replaces them once it lands.
+
   Based on the "safety vest" emoji from Twemoji.
   Copyright 2019 Twitter, Inc and other contributors.
   Graphics licensed under CC-BY 4.0:
@@ -23,3 +28,20 @@ Logo and application icons
   that applies to the source code in this repository. Attribution must be
   retained in any distribution, including compiled or hosted versions of
   the application.
+
+Icons in the interface
+
+  Lucide — https://lucide.dev
+  Copyright (c) 2020 Lucide Contributors
+  Copyright (c) 2013-2022 Cole Bemis (Feather icons)
+  Licensed under the ISC License.
+
+  Only the icons the interface actually uses are bundled; see
+  src/App/src/app/ui/icon.ts.
+
+Fonts
+
+  Schibsted Grotesk, Newsreader and IBM Plex Mono, all under the SIL Open
+  Font License 1.1. Bundled from the @fontsource packages rather than
+  loaded from a font CDN. The licence texts ship with those packages and
+  in the build's 3rdpartylicenses.txt.

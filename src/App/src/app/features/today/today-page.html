@@ -1,0 +1,150 @@
+@let data = resource.value();
+@let status = resource.status();
+
+@if (status === 'loading' && !data) {
+  <div class="stack" aria-busy="true">
+    <ui-skeleton width="120px" height="14px" radius="var(--radius-pill)" />
+    <ui-skeleton width="230px" height="26px" radius="var(--radius-sm)" />
+    @for (row of [1, 2, 3]; track row) {
+      <section class="card">
+        <ui-skeleton width="130px" height="22px" radius="var(--radius-pill)" />
+        <ui-skeleton height="16px" radius="var(--radius-xs)" />
+        <ui-skeleton width="72%" height="16px" radius="var(--radius-xs)" />
+      </section>
+    }
+    <p class="faint small">Bezetting van vandaag wordt opgehaald.</p>
+  </div>
+} @else if (!data) {
+  <div class="stack">
+    <h2>Overzicht niet opgehaald</h2>
+    <p class="muted">
+      We konden de bezetting van vandaag niet ophalen en er staat nog geen eerdere versie op dit
+      toestel.
+    </p>
+    <div>
+      <button uiButton variant="secondary" size="md" type="button" (click)="refresh()">
+        <ui-icon name="refresh-cw" />
+        Opnieuw proberen
+      </button>
+    </div>
+  </div>
+} @else {
+  <div class="stack">
+    @if (resource.isStale()) {
+      <ui-note tone="warning" title="Je bent offline">
+        Dit is de opgeslagen versie van {{ fetchedAtTime() }}. Afmeldingen van daarna staan er niet
+        in; bellen werkt gewoon.
+      </ui-note>
+    }
+
+    @if (!data.event) {
+      <!-- The most common state by far, so it stays calm: one line, no
+           empty box with an exclamation mark. -->
+      <header>
+        <div class="eyebrow">{{ data.date | longDate }}</div>
+        <h2>Geen evenement vandaag</h2>
+      </header>
+      @if (data.nextEvent) {
+        <p class="muted next">
+          Het eerstvolgende evenement is {{ data.nextEvent.title }} op
+          {{ data.nextEvent.start | longDate }},
+          {{ data.nextEvent.start | timeRange: data.nextEvent.end }}.
+        </p>
+      } @else {
+        <p class="muted next">Er staat nog niets in de agenda.</p>
+      }
+    } @else {
+      @let event = data.event;
+
+      <header>
+        <div class="eyebrow">{{ event.start | longDate }} · vandaag</div>
+        <h2>{{ event.title }}</h2>
+        <div class="data muted when">
+          {{ event.start | timeRange: event.end }} · {{ event.locationName }}
+        </div>
+        <div class="status-line">
+          <ui-badge [tone]="event.filledCount < event.requiredCount ? 'gap' : 'filled'" dot>
+            {{ occupancyLabel(event.filledCount, event.requiredCount) }}
+          </ui-badge>
+          <span class="data micro faint">{{ updatedAt() }}</span>
+        </div>
+      </header>
+
+      @for (advisory of event.advisories; track advisory.id) {
+        <ui-note tone="info" [title]="advisory.title">{{ advisory.text }}</ui-note>
+      }
+
+      @if (event.ownShift) {
+        @let own = event.ownShift;
+        <section class="own" [style.border-left-color]="vestColor(own.vestColor)">
+          <div class="own-head">
+            <span class="eyebrow accent">Jij staat vandaag</span>
+            <span class="data">{{ own.start | timeRange: own.end }}</span>
+          </div>
+          <div class="own-line">{{ own.personName }} · {{ own.teamRoleName }}</div>
+          @if (own.note) {
+            <p class="muted small">{{ own.note }}</p>
+          }
+        </section>
+      }
+
+      @for (group of event.roleGroups; track group.shiftId) {
+        <section class="card group" [style.border-left-color]="vestColor(group.vestColor)">
+          <div class="group-head">
+            <ui-vest-chip [roleName]="group.teamRoleName" [vestColor]="group.vestColor" />
+            <ui-badge [tone]="group.openSpots ? 'gap' : 'filled'">{{ groupLabel(group) }}</ui-badge>
+          </div>
+          <div class="data muted small">{{ group.start | timeRange: group.end }}</div>
+
+          <ul class="people">
+            @for (person of group.people; track person.personId) {
+              <li>
+                <span class="avatar data">{{ person.initials }}</span>
+                <span class="who">
+                  <span class="name">
+                    {{ person.name }}
+                    @if (person.isSelf) {
+                      <span class="self">jij</span>
+                    }
+                  </span>
+                  <span class="data small faint">
+                    {{ person.phone ?? hiddenPhoneLabel(event.phoneNumbers) }}
+                  </span>
+                </span>
+                @if (person.phone) {
+                  <a uiButton variant="secondary" size="md" [href]="telHref(person.phone)">
+                    <ui-icon name="phone" />
+                    Bellen
+                  </a>
+                }
+              </li>
+            }
+
+            @if (group.openSpots) {
+              @let spots = group.openSpots;
+              <li class="gap">
+                <span class="who">
+                  <span class="name">{{ gapTitle(group, spots) }}</span>
+                  <span class="small muted">{{ gapReason(spots) }}</span>
+                </span>
+                <button
+                  uiButton
+                  variant="accent"
+                  size="md"
+                  type="button"
+                  [disabled]="claiming() !== null"
+                  (click)="claim(group.shiftId)"
+                >
+                  <ui-icon name="hand" />
+                  {{ claiming() === group.shiftId ? 'Bezig…' : 'Ik doe het' }}
+                </button>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+
+      <p class="faint small footnote">{{ phoneFootnote(event.phoneNumbers) }}</p>
+    }
+  </div>
+}

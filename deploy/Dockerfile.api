@@ -1,6 +1,16 @@
 # Build context is the repo root (see docker-compose.yml), so paths here
 # are relative to that root, not to this file.
 
+# The PWA is served by the API as static files, from the same origin.
+# That keeps the session cookie same-site, needs no CORS, and means one
+# container and one Caddy block per tenant instead of two.
+FROM node:24-alpine AS frontend
+WORKDIR /src/App
+COPY src/App/package.json src/App/package-lock.json ./
+RUN npm ci
+COPY src/App/ ./
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY src/Api/Api.csproj src/Api/
@@ -13,5 +23,6 @@ RUN dotnet publish src/Api/Api.csproj -c Release -o /app/publish --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
+COPY --from=frontend /src/App/dist/app ./wwwroot
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "Api.dll"]
