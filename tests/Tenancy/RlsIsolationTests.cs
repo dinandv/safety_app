@@ -170,6 +170,14 @@ public sealed class RlsIsolationTests : IAsyncLifetime
         Assert.Equal(0, await cmd.ExecuteNonQueryAsync());
     }
 
+    // Tabellen die bewust geen RLS hebben, met reden. Voeg hier nooit een
+    // tenant-tabel aan toe om deze test te laten slagen — de hele waarde
+    // van de test zit erin dat hij omvalt bij een vergeten policy.
+    private static readonly string[] GeenTenantDataUitzonderingen =
+    [
+        "__EFMigrationsHistory", // EF Core's eigen migratietabel, geen tenant-data
+    ];
+
     [Fact]
     public async Task Elke_tabel_met_tenant_id_heeft_rls_aan()
     {
@@ -182,8 +190,10 @@ public sealed class RlsIsolationTests : IAsyncLifetime
             SELECT count(*) FROM pg_tables t
             JOIN pg_class c ON c.relname = t.tablename
             WHERE t.schemaname = 'public'
+              AND t.tablename <> ALL(@uitgezonderd)
               AND (c.relrowsecurity = false OR c.relforcerowsecurity = false)
-            """);
+            """,
+            ("uitgezonderd", GeenTenantDataUitzonderingen));
         Assert.Equal(0, zonderRls);
     }
 }
