@@ -1,0 +1,34 @@
+# Eén blok per tenant. Bewust geen wildcardcertificaat: dat vereist
+# DNS-01 met een provider-plugin, en bij vier tenants is expliciet
+# opsommen eenvoudiger én zichtbaarder. De DNS mag wel een wildcard zijn.
+#
+# De tenant wordt bepaald uit de hostnaam en doorgegeven aan de API.
+# Nooit uit een header die de client zelf kan zetten.
+
+(app) {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy api:8080 {
+		header_up X-Forwarded-Host {host}
+	}
+}
+
+bcc-safety.getanapp.nl {
+	import app
+}
+
+# Demo-tenant met fictieve data. Deze mag je laten zien; de echte niet.
+demo.bcc-safety.getanapp.nl {
+	import app
+}
+
+# Volgende tenants: één blok erbij, DNS-record erbij, reload. Geen deploy.
+# gld.bcc-safety.getanapp.nl { import app }

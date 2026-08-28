@@ -1,3 +1,57 @@
+# ---------------------------------------------------------------------
+# Werkmap voor alles wat niet publiek mag: analyses, planning, klant-
+# documenten, aantekeningen. Blijft binnen de repo-map zodat het bij
+# elkaar staat, maar gaat nooit mee in een commit.
+# ---------------------------------------------------------------------
+/.local/
+
+# ---------------------------------------------------------------------
+# Vertrouwelijk materiaal — mag nooit in deze publieke repo terechtkomen
+# ---------------------------------------------------------------------
+# Telegram-exports, deelnemerslijsten, het organisatiehandboek en alles
+# wat naar een concrete locatie of persoon te herleiden is.
+
+*.vertrouwelijk.*
+/analyse/
+/private/
+telegram-export*
+*deelnemers*
+*ledenlijst*
+
+# Organisatiedocumenten en bijlagen van de klant
+*.pdf
+*.docx
+*.doc
+!docs/**/*.pdf
+
+# Foto's en video's uit de groepen (sleutelposities, installaties)
+photo_*.jpg
+video_*.mp4
+/Groepen/
+
+# ---------------------------------------------------------------------
+# Secrets
+# ---------------------------------------------------------------------
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.template.json
+*.env
+.env.*
+secrets.json
+*.pfx
+*.pem
+
+# ---------------------------------------------------------------------
+# .NET / Angular
+# ---------------------------------------------------------------------
+bin/
+obj/
+node_modules/
+dist/
+.vs/
+.vscode/
+*.user
+TestResults/
 # Angular specific
 /dist/
 /out-tsc/

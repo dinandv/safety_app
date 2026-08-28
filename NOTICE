@@ -1,0 +1,25 @@
+Safety App
+Copyright 2026 Dinand Veldman / Sommité
+
+This product includes software developed by Dinand Veldman / Sommité,
+licensed under the Apache License, Version 2.0.
+
+--------------------------------------------------------------------------
+Third-party assets
+--------------------------------------------------------------------------
+
+Logo and application icons
+
+  Based on the "safety vest" emoji from Twemoji.
+  Copyright 2019 Twitter, Inc and other contributors.
+  Graphics licensed under CC-BY 4.0:
+  https://creativecommons.org/licenses/by/4.0/
+  Source: https://github.com/twitter/twemoji
+
+  The artwork has been modified (recoloured and resized) for use as an
+  application icon. Modifications are distributed under the same licence.
+
+  Note: the Twemoji graphics are NOT covered by the Apache 2.0 licence
+  that applies to the source code in this repository. Attribution must be
+  retained in any distribution, including compiled or hosted versions of
+  the application.
