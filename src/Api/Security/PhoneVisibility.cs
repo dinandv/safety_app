@@ -1,3 +1,5 @@
+using BccSafety.Api.Contracts;
+
 namespace BccSafety.Api.Security;
 
 /// <summary>
@@ -22,10 +24,14 @@ public static class PhoneVisibility
     /// <summary>And stay this long after it ends, for the wrap-up.</summary>
     public static readonly TimeSpan Grace = TimeSpan.FromHours(2);
 
-    public static bool IsVisible(
+    public static PhoneVisibilityState Evaluate(
         bool callerIsScheduled,
         DateTimeOffset eventStart,
         DateTimeOffset eventEnd,
         DateTimeOffset now)
-        => callerIsScheduled && now >= eventStart - Lead && now <= eventEnd + Grace;
+    {
+        if (!callerIsScheduled) return PhoneVisibilityState.NotScheduled;
+        var withinWindow = now >= eventStart - Lead && now <= eventEnd + Grace;
+        return withinWindow ? PhoneVisibilityState.Visible : PhoneVisibilityState.OutsideShiftWindow;
+    }
 }
