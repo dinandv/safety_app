@@ -95,10 +95,19 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
-// Before tenant resolution on purpose: the PWA shell is the same build
-// for every tenant, so serving it should not cost a database round trip
-// per asset.
-app.UseDefaultFiles();
+// Before tenant resolution on purpose: scripts, styles, fonts and icons
+// are the same build for every tenant, so serving them should not cost a
+// database round trip each.
+//
+// Navigations do not take this shortcut, and should not. "/" and "/today"
+// match the fallback endpoint below, which selects an endpoint before
+// this middleware runs and makes it stand aside — so they pass through
+// tenant resolution and an unknown hostname gets a 404 instead of the
+// shell. That is one lookup per app start, not per request.
+//
+// UseDefaultFiles is deliberately absent for the same reason: it would
+// never see "/" either, and a line that looks like it maps "/" to
+// index.html while the fallback actually does it is worse than no line.
 app.UseStaticFiles();
 
 app.UseRateLimiter();
@@ -121,3 +130,10 @@ app.MapFallback("/api/{*rest}", () => Results.NotFound());
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+// Top-level statements compile to an internal Program, which
+// WebApplicationFactory cannot reach. This makes the entry point visible
+// to the integration tests so they run the real pipeline — tenant
+// resolution, authentication, row-level security and all — rather than a
+// second pipeline assembled to look like it.
+public partial class Program;

@@ -80,3 +80,12 @@ TestResults/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# ---------------------------------------------------------------------
+# Frontend-build in de API
+# ---------------------------------------------------------------------
+# De PWA wordt hierin gebouwd (zie deploy/Dockerfile.api). Lokaal komt
+# die map vol te staan zodra je de build ernaartoe draait; gecommit zou
+# hij een verouderde frontend meeleveren die niemand terugvindt.
+/src/Api/wwwroot/*
+!/src/Api/wwwroot/.gitkeep
