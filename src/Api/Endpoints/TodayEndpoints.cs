@@ -26,6 +26,12 @@ public static class TodayEndpoints
         app.MapGet("/api/today", GetAsync).RequireAuthorization();
     }
 
+    private static DateTimeOffset StartOfLocalDay(DateOnly day, TimeZoneInfo timeZone)
+    {
+        var local = day.ToDateTime(TimeOnly.MinValue);
+        return new DateTimeOffset(local, timeZone.GetUtcOffset(local)).ToUniversalTime();
+    }
+
     private static async Task<IResult> GetAsync(
         ClaimsPrincipal user,
         BccSafetyDbContext db,
@@ -38,10 +44,18 @@ public static class TodayEndpoints
         if (personId is null) return Results.Forbid();
 
         var now = time.GetUtcNow();
-        var localNow = TimeZoneInfo.ConvertTime(now, timeZone);
-        var today = DateOnly.FromDateTime(localNow.DateTime);
-        var dayStart = new DateTimeOffset(today.ToDateTime(TimeOnly.MinValue), timeZone.GetUtcOffset(localNow));
-        var dayEnd = dayStart.AddDays(1);
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, timeZone).DateTime);
+
+        // Both bounds are converted to UTC before they go anywhere near
+        // the database: Npgsql refuses any other offset for a
+        // timestamptz, so leaving them on local time throws for every
+        // tenant that is not on UTC — which is all of them.
+        //
+        // The end is the start of the next local day rather than
+        // start + 24h. The night the clocks go back is 25 hours long,
+        // and a Saturday evening event should still count as today.
+        var dayStart = StartOfLocalDay(today, timeZone);
+        var dayEnd = StartOfLocalDay(today.AddDays(1), timeZone);
 
         // An event that runs over midnight still counts as today's, hence
         // the overlap test rather than a comparison on the start date.
