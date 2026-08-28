@@ -1,5 +1,6 @@
 using Npgsql;
 using Testcontainers.PostgreSql;
+using Xunit;
 
 namespace BccSafety.Tests.Tenancy;
 
@@ -22,6 +23,9 @@ public sealed class RlsIsolationTests : IAsyncLifetime
     private static readonly Guid TenantB = Guid.Parse("22222222-2222-2222-2222-222222222222");
     private static readonly Guid PersoonA = Guid.Parse("aaaaaaaa-0000-0000-0000-000000000001");
     private static readonly Guid PersoonB = Guid.Parse("bbbbbbbb-0000-0000-0000-000000000001");
+    private static readonly Guid LocatieA = Guid.Parse("cccccccc-0000-0000-0000-000000000001");
+    private static readonly Guid EvenementtypeA = Guid.Parse("dddddddd-0000-0000-0000-000000000001");
+    private static readonly Guid EvenementLandelijkeDag = Guid.Parse("eeeeeeee-0000-0000-0000-000000000001");
 
     private string _appConnectionString = default!;
 
@@ -65,6 +69,47 @@ public sealed class RlsIsolationTests : IAsyncLifetime
         return Convert.ToInt64(await cmd.ExecuteScalarAsync());
     }
 
+    /// <summary>
+    /// Twee tenants met elk één persoon, en een evenement van tenant A dat
+    /// tenant B als geaccepteerde gast heeft — nodig voor de gasttenant-test.
+    /// Draait als eigenaar, dus rechtstreeks via SQL, niet via de app-rol.
+    /// </summary>
+    private static async Task SeedAsync(NpgsqlConnection owner)
+    {
+        await using var cmd = new NpgsqlCommand(
+            """
+            INSERT INTO tenant (id, naam, slug, actief, aangemaakt_op) VALUES
+                (@tenantA, 'Tenant A', 'tenant-a', true, now()),
+                (@tenantB, 'Tenant B', 'tenant-b', true, now());
+
+            INSERT INTO persoon (id, tenant_id, voornaam, achternaam, geboortedatum, email, status) VALUES
+                (@persoonA, @tenantA, 'Anna', 'Voorbeeld', '1990-01-01', 'a@voorbeeld.test', 'actief'),
+                (@persoonB, @tenantB, 'Bob', 'Voorbeeld', '1990-01-01', 'b@voorbeeld.test', 'actief');
+
+            INSERT INTO locatie (id, tenant_id, naam)
+                VALUES (@locatieA, @tenantA, 'Hoofdlocatie');
+
+            INSERT INTO evenementtype (id, tenant_id, naam, actief)
+                VALUES (@typeA, @tenantA, 'Testtype', true);
+
+            INSERT INTO evenement
+                (id, tenant_id, evenementtype_id, locatie_id, titel, start, eind, status, bron)
+                VALUES (@evenement, @tenantA, @typeA, @locatieA, 'Landelijke dag',
+                        now(), now() + interval '2 hours', 'gepland', 'handmatig');
+
+            INSERT INTO evenement_gasttenant (evenement_id, tenant_id, eigenaar_tenant_id, status)
+                VALUES (@evenement, @tenantB, @tenantA, 'geaccepteerd');
+            """, owner);
+        cmd.Parameters.AddWithValue("tenantA", TenantA);
+        cmd.Parameters.AddWithValue("tenantB", TenantB);
+        cmd.Parameters.AddWithValue("persoonA", PersoonA);
+        cmd.Parameters.AddWithValue("persoonB", PersoonB);
+        cmd.Parameters.AddWithValue("locatieA", LocatieA);
+        cmd.Parameters.AddWithValue("typeA", EvenementtypeA);
+        cmd.Parameters.AddWithValue("evenement", EvenementLandelijkeDag);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
     [Fact]
     public async Task Tenant_ziet_alleen_eigen_personen()
     {
@@ -99,8 +144,8 @@ public sealed class RlsIsolationTests : IAsyncLifetime
         await using var conn = await OpenAsAsync(TenantA);
         await using var cmd = new NpgsqlCommand(
             """
-            INSERT INTO persoon (id, tenant_id, voornaam, achternaam, email)
-            VALUES (gen_random_uuid(), @tenant, 'Mallory', 'Smokkel', 'm@x.nl')
+            INSERT INTO persoon (id, tenant_id, voornaam, achternaam, geboortedatum, email)
+            VALUES (gen_random_uuid(), @tenant, 'Mallory', 'Smokkel', '1990-01-01', 'm@x.nl')
             """, conn);
         cmd.Parameters.AddWithValue("tenant", TenantB);
 

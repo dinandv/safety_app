@@ -50,11 +50,11 @@ DO $$
 DECLARE t text;
 BEGIN
   FOREACH t IN ARRAY ARRAY[
-    'persoon', 'persoon_teamrol', 'teamrol', 'kwalificatie_type',
-    'kwalificatie', 'beschikbaarheid', 'evenementtype', 'dienstsjabloon',
-    'persoon_evenementtype_uitzondering', 'agenda_bron',
-    'kandidaat_evenement', 'locatie', 'evenement', 'evenement_gasttenant',
-    'dienst', 'toewijzing', 'ruilverzoek', 'checkin', 'richtlijn',
+    'persoon', 'persoon_approl', 'persoon_teamrol', 'teamrol',
+    'kwalificatie_type', 'kwalificatie', 'beschikbaarheid', 'evenementtype',
+    'dienstsjabloon', 'persoon_evenementtype_uitzondering', 'agenda_bron',
+    'kandidaat_evenement', 'locatie', 'evenement', 'agenda_afwijking',
+    'evenement_gasttenant', 'dienst', 'toewijzing', 'ruilverzoek', 'checkin', 'richtlijn',
     'document', 'aandachtspunt', 'contact', 'notificatie', 'auditlog'
   ]
   LOOP
@@ -89,15 +89,19 @@ END$$;
 -- Een evenement heeft één eigenaar-tenant en kan andere tenants
 -- uitnodigen. Lezen mag de eigenaar én elke geaccepteerde gast.
 -- Schrijven mag alleen de eigenaar.
+--
+-- evenement_gasttenant.eigenaar_tenant_id is een bewuste denormalisatie
+-- van evenement.tenant_id (door de applicatie gezet bij het aanmaken van
+-- de uitnodiging, daarna niet meer gewijzigd). Zonder die kolom moet de
+-- policy hier in evenement kijken, en de leespolicy van evenement kijkt op
+-- zijn beurt in evenement_gasttenant — Postgres meldt dat als "infinite
+-- recursion detected in policy" omdat beide policies elkaars uitkomst
+-- nodig hebben. De denormalisatie doorbreekt die cirkel.
 
 CREATE POLICY evenement_gasttenant_tenant ON evenement_gasttenant
   USING (
     tenant_id = app.current_tenant()
-    OR EXISTS (
-      SELECT 1 FROM evenement e
-      WHERE e.id = evenement_gasttenant.evenement_id
-        AND e.tenant_id = app.current_tenant()
-    )
+    OR eigenaar_tenant_id = app.current_tenant()
   );
 
 CREATE POLICY evenement_lezen ON evenement FOR SELECT
@@ -140,6 +144,24 @@ CREATE POLICY dienst_schrijven ON dienst FOR ALL
     WHERE e.id = dienst.evenement_id
       AND e.tenant_id = app.current_tenant()));
 
+-- Afwijkingen tussen agenda en rooster volgen dezelfde zichtbaarheid als
+-- het evenement waar ze bij horen: leesbaar voor eigenaar én gast,
+-- afhandelen (schrijven) alleen door de eigenaar-tenant.
+
+CREATE POLICY agenda_afwijking_lezen ON agenda_afwijking FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM evenement e WHERE e.id = agenda_afwijking.evenement_id));
+
+CREATE POLICY agenda_afwijking_schrijven ON agenda_afwijking FOR ALL
+  USING (EXISTS (
+    SELECT 1 FROM evenement e
+    WHERE e.id = agenda_afwijking.evenement_id
+      AND e.tenant_id = app.current_tenant()))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM evenement e
+    WHERE e.id = agenda_afwijking.evenement_id
+      AND e.tenant_id = app.current_tenant()));
+
 -- Toewijzingen mogen door de eigenaar-tenant worden gemaakt, én door de
 -- thuis-tenant van de persoon zelf: een gastgemeente vult haar eigen
 -- mensen in op een gedeeld evenement.
@@ -166,7 +188,7 @@ DO $$
 DECLARE t text;
 BEGIN
   FOREACH t IN ARRAY ARRAY[
-    'persoon_teamrol', 'kwalificatie', 'beschikbaarheid',
+    'persoon_approl', 'persoon_teamrol', 'kwalificatie', 'beschikbaarheid',
     'persoon_evenementtype_uitzondering'
   ]
   LOOP

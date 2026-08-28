@@ -168,8 +168,14 @@ tijd_gewijzigd | geen_bron_meer), `gedetecteerd_op`, `afgehandeld_op`
 > bij het ruilen dat het evenement waarvoor hij ingedeeld staat niet meer
 > bestaat.
 
-**evenement_gasttenant** — `evenement_id`, `tenant_id`, `status`
-(uitgenodigd | geaccepteerd | geweigerd)
+**evenement_gasttenant** — `evenement_id`, `tenant_id`, `eigenaar_tenant_id`,
+`status` (uitgenodigd | geaccepteerd | geweigerd)
+
+> `eigenaar_tenant_id` is een bewuste denormalisatie van `evenement.tenant_id`.
+> Zonder die kolom moet de RLS-policy hier in `evenement` kijken, terwijl de
+> leespolicy van `evenement` op zijn beurt deze tabel raadpleegt — Postgres
+> weigert dat als cirkelverwijzing ("infinite recursion detected in
+> policy"). Zie `db/001_tenancy_rls.sql`.
 
 ### Rooster
 
