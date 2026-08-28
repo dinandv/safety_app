@@ -1,0 +1,2 @@
+<!-- The Angular PWA is built into this folder (see src/App). Kept so
+     a source checkout without a frontend build still starts. -->
