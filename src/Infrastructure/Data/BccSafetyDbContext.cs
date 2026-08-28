@@ -1,15 +1,15 @@
-using BccSafety.Infrastructure.Entiteiten;
+using BccSafety.Infrastructure.Entities;
 using BccSafety.Infrastructure.Tenancy;
 using Microsoft.EntityFrameworkCore;
 
 namespace BccSafety.Infrastructure.Data;
 
 /// <summary>
-/// EF Core is hier de ergonomie, niet de beveiliging. De query filters
-/// hieronder dupliceren de Postgres row-level security-policies uit
-/// db/001_tenancy_rls.sql zodat een vergeten .Where(tenantId) geen gat
-/// slaat, maar de policies zijn het echte vangnet als deze filters ooit
-/// niet kloppen.
+/// EF Core is the ergonomics here, not the security. The query filters
+/// below duplicate the Postgres row-level security policies in
+/// db/001_tenancy_rls.sql so a forgotten .Where(tenantId) doesn't open a
+/// gap, but the policies are the real safety net if these filters are
+/// ever wrong.
 /// </summary>
 public sealed class BccSafetyDbContext : DbContext
 {
@@ -22,36 +22,37 @@ public sealed class BccSafetyDbContext : DbContext
     }
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
-    public DbSet<Persoon> Personen => Set<Persoon>();
-    public DbSet<PersoonApprol> PersoonApprollen => Set<PersoonApprol>();
-    public DbSet<Teamrol> Teamrollen => Set<Teamrol>();
-    public DbSet<PersoonTeamrol> PersoonTeamrollen => Set<PersoonTeamrol>();
-    public DbSet<KwalificatieType> KwalificatieTypen => Set<KwalificatieType>();
-    public DbSet<Kwalificatie> Kwalificaties => Set<Kwalificatie>();
-    public DbSet<Beschikbaarheid> Beschikbaarheden => Set<Beschikbaarheid>();
-    public DbSet<Evenementtype> Evenementtypen => Set<Evenementtype>();
-    public DbSet<PersoonEvenementtypeUitzondering> PersoonEvenementtypeUitzonderingen => Set<PersoonEvenementtypeUitzondering>();
-    public DbSet<Dienstsjabloon> Dienstsjablonen => Set<Dienstsjabloon>();
-    public DbSet<AgendaBron> AgendaBronnen => Set<AgendaBron>();
-    public DbSet<KandidaatEvenement> KandidaatEvenementen => Set<KandidaatEvenement>();
-    public DbSet<Locatie> Locaties => Set<Locatie>();
-    public DbSet<Evenement> Evenementen => Set<Evenement>();
-    public DbSet<AgendaAfwijking> AgendaAfwijkingen => Set<AgendaAfwijking>();
-    public DbSet<EvenementGasttenant> EvenementGasttenanten => Set<EvenementGasttenant>();
-    public DbSet<Dienst> Diensten => Set<Dienst>();
-    public DbSet<Toewijzing> Toewijzingen => Set<Toewijzing>();
-    public DbSet<Ruilverzoek> Ruilverzoeken => Set<Ruilverzoek>();
-    public DbSet<Checkin> Checkins => Set<Checkin>();
-    public DbSet<Richtlijn> Richtlijnen => Set<Richtlijn>();
-    public DbSet<Document> Documenten => Set<Document>();
-    public DbSet<Aandachtspunt> Aandachtspunten => Set<Aandachtspunt>();
-    public DbSet<Contact> Contacten => Set<Contact>();
-    public DbSet<Notificatie> Notificaties => Set<Notificatie>();
-    public DbSet<Auditlog> Auditlogs => Set<Auditlog>();
+    public DbSet<Person> People => Set<Person>();
+    public DbSet<PersonAppRole> PersonAppRoles => Set<PersonAppRole>();
+    public DbSet<TeamRole> TeamRoles => Set<TeamRole>();
+    public DbSet<PersonTeamRole> PersonTeamRoles => Set<PersonTeamRole>();
+    public DbSet<ActionToken> ActionTokens => Set<ActionToken>();
+    public DbSet<QualificationType> QualificationTypes => Set<QualificationType>();
+    public DbSet<Qualification> Qualifications => Set<Qualification>();
+    public DbSet<Availability> Availabilities => Set<Availability>();
+    public DbSet<EventType> EventTypes => Set<EventType>();
+    public DbSet<PersonEventTypeException> PersonEventTypeExceptions => Set<PersonEventTypeException>();
+    public DbSet<ShiftTemplate> ShiftTemplates => Set<ShiftTemplate>();
+    public DbSet<CalendarSource> CalendarSources => Set<CalendarSource>();
+    public DbSet<CandidateEvent> CandidateEvents => Set<CandidateEvent>();
+    public DbSet<Location> Locations => Set<Location>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<CalendarMismatch> CalendarMismatches => Set<CalendarMismatch>();
+    public DbSet<EventGuestTenant> EventGuestTenants => Set<EventGuestTenant>();
+    public DbSet<Shift> Shifts => Set<Shift>();
+    public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<SwapRequest> SwapRequests => Set<SwapRequest>();
+    public DbSet<CheckIn> CheckIns => Set<CheckIn>();
+    public DbSet<Guideline> Guidelines => Set<Guideline>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<Advisory> Advisories => Set<Advisory>();
+    public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // --- Tenant en identiteit -----------------------------------------
+        // --- Tenant and identity -----------------------------------------
 
         modelBuilder.Entity<Tenant>(e =>
         {
@@ -62,9 +63,9 @@ public sealed class BccSafetyDbContext : DbContext
             e.HasQueryFilter(x => x.Id == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Persoon>(e =>
+        modelBuilder.Entity<Person>(e =>
         {
-            e.ToTable("persoon");
+            e.ToTable("person");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.Status).HasConversion<string>();
@@ -72,251 +73,262 @@ public sealed class BccSafetyDbContext : DbContext
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<PersoonApprol>(e =>
+        modelBuilder.Entity<PersonAppRole>(e =>
         {
-            e.ToTable("persoon_approl");
-            e.HasKey(x => new { x.PersoonId, x.Approl });
-            e.Property(x => x.Approl).HasConversion<string>();
-            e.HasOne(x => x.Persoon).WithMany().HasForeignKey(x => x.PersoonId);
-            e.HasQueryFilter(x => x.Persoon.TenantId == _tenantContext.TenantId);
+            e.ToTable("person_app_role");
+            e.HasKey(x => new { x.PersonId, x.AppRole });
+            e.Property(x => x.AppRole).HasConversion<string>();
+            e.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
+            e.HasQueryFilter(x => x.Person.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Teamrol>(e =>
+        modelBuilder.Entity<TeamRole>(e =>
         {
-            e.ToTable("teamrol");
+            e.ToTable("team_role");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.Soort).HasConversion<string>();
+            e.Property(x => x.Kind).HasConversion<string>();
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<PersoonTeamrol>(e =>
+        modelBuilder.Entity<PersonTeamRole>(e =>
         {
-            e.ToTable("persoon_teamrol");
-            e.HasKey(x => new { x.PersoonId, x.TeamrolId });
-            e.HasOne(x => x.Persoon).WithMany().HasForeignKey(x => x.PersoonId);
-            e.HasOne(x => x.Teamrol).WithMany().HasForeignKey(x => x.TeamrolId);
-            e.HasQueryFilter(x => x.Persoon.TenantId == _tenantContext.TenantId);
+            e.ToTable("person_team_role");
+            e.HasKey(x => new { x.PersonId, x.TeamRoleId });
+            e.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
+            e.HasOne(x => x.TeamRole).WithMany().HasForeignKey(x => x.TeamRoleId);
+            e.HasQueryFilter(x => x.Person.TenantId == _tenantContext.TenantId);
         });
 
-        // --- Kwalificaties en beschikbaarheid ------------------------------
-
-        modelBuilder.Entity<KwalificatieType>(e =>
+        modelBuilder.Entity<ActionToken>(e =>
         {
-            e.ToTable("kwalificatie_type");
+            e.ToTable("action_token");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(x => x.Purpose).HasConversion<string>();
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
+            e.HasQueryFilter(x => x.Person.TenantId == _tenantContext.TenantId);
+        });
+
+        // --- Qualifications and availability ------------------------------
+
+        modelBuilder.Entity<QualificationType>(e =>
+        {
+            e.ToTable("qualification_type");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
-            e.HasOne(x => x.VereistVoorTeamrol).WithMany()
-                .HasForeignKey(x => x.VereistVoorTeamrolId)
+            e.HasOne(x => x.RequiredForTeamRole).WithMany()
+                .HasForeignKey(x => x.RequiredForTeamRoleId)
                 .OnDelete(DeleteBehavior.SetNull);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Kwalificatie>(e =>
+        modelBuilder.Entity<Qualification>(e =>
         {
-            e.ToTable("kwalificatie");
+            e.ToTable("qualification");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.HasOne(x => x.Persoon).WithMany().HasForeignKey(x => x.PersoonId);
-            e.HasOne(x => x.KwalificatieType).WithMany().HasForeignKey(x => x.KwalificatieTypeId);
-            e.HasQueryFilter(x => x.Persoon.TenantId == _tenantContext.TenantId);
+            e.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
+            e.HasOne(x => x.QualificationType).WithMany().HasForeignKey(x => x.QualificationTypeId);
+            e.HasQueryFilter(x => x.Person.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Beschikbaarheid>(e =>
+        modelBuilder.Entity<Availability>(e =>
         {
-            e.ToTable("beschikbaarheid");
+            e.ToTable("availability");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.Soort).HasConversion<string>();
-            e.HasOne(x => x.Persoon).WithMany().HasForeignKey(x => x.PersoonId);
-            e.HasQueryFilter(x => x.Persoon.TenantId == _tenantContext.TenantId);
+            e.Property(x => x.Kind).HasConversion<string>();
+            e.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId);
+            e.HasQueryFilter(x => x.Person.TenantId == _tenantContext.TenantId);
         });
 
-        // --- Evenementen ----------------------------------------------------
+        // --- Events ----------------------------------------------------------
 
-        modelBuilder.Entity<Evenementtype>(e =>
+        modelBuilder.Entity<EventType>(e =>
         {
-            e.ToTable("evenementtype");
+            e.ToTable("event_type");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
-            e.HasOne(x => x.VereisteBekwaamheid).WithMany()
-                .HasForeignKey(x => x.VereisteBekwaamheidId)
+            e.HasOne(x => x.RequiredSkill).WithMany()
+                .HasForeignKey(x => x.RequiredSkillId)
                 .OnDelete(DeleteBehavior.SetNull);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<PersoonEvenementtypeUitzondering>(e =>
+        modelBuilder.Entity<PersonEventTypeException>(e =>
         {
-            e.ToTable("persoon_evenementtype_uitzondering");
-            e.HasKey(x => new { x.PersoonId, x.EvenementtypeId });
-            e.Property(x => x.Oordeel).HasConversion<string>();
-            e.HasOne(x => x.Persoon).WithMany()
-                .HasForeignKey(x => x.PersoonId);
-            e.HasOne(x => x.Evenementtype).WithMany()
-                .HasForeignKey(x => x.EvenementtypeId);
-            e.HasOne(x => x.VastgelegdDoorPersoon).WithMany()
-                .HasForeignKey(x => x.VastgelegdDoorPersoonId)
+            e.ToTable("person_event_type_exception");
+            e.HasKey(x => new { x.PersonId, x.EventTypeId });
+            e.Property(x => x.Verdict).HasConversion<string>();
+            e.HasOne(x => x.Person).WithMany()
+                .HasForeignKey(x => x.PersonId);
+            e.HasOne(x => x.EventType).WithMany()
+                .HasForeignKey(x => x.EventTypeId);
+            e.HasOne(x => x.RecordedByPerson).WithMany()
+                .HasForeignKey(x => x.RecordedByPersonId)
                 .OnDelete(DeleteBehavior.Restrict);
-            e.HasQueryFilter(x => x.Persoon.TenantId == _tenantContext.TenantId);
+            e.HasQueryFilter(x => x.Person.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Dienstsjabloon>(e =>
+        modelBuilder.Entity<ShiftTemplate>(e =>
         {
-            e.ToTable("dienstsjabloon");
+            e.ToTable("shift_template");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.HasOne(x => x.Evenementtype).WithMany().HasForeignKey(x => x.EvenementtypeId);
-            e.HasOne(x => x.Teamrol).WithMany().HasForeignKey(x => x.TeamrolId);
-            e.HasQueryFilter(x => x.Evenementtype.TenantId == _tenantContext.TenantId);
+            e.HasOne(x => x.EventType).WithMany().HasForeignKey(x => x.EventTypeId);
+            e.HasOne(x => x.TeamRole).WithMany().HasForeignKey(x => x.TeamRoleId);
+            e.HasQueryFilter(x => x.EventType.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<AgendaBron>(e =>
+        modelBuilder.Entity<CalendarSource>(e =>
         {
-            e.ToTable("agenda_bron");
+            e.ToTable("calendar_source");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<KandidaatEvenement>(e =>
+        modelBuilder.Entity<CandidateEvent>(e =>
         {
-            e.ToTable("kandidaat_evenement");
+            e.ToTable("candidate_event");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.Status).HasConversion<string>();
-            e.HasIndex(x => new { x.AgendaBronId, x.IcsUid, x.RecurrenceId }).IsUnique();
-            e.HasOne(x => x.AgendaBron).WithMany().HasForeignKey(x => x.AgendaBronId);
-            e.HasQueryFilter(x => x.AgendaBron.TenantId == _tenantContext.TenantId);
+            e.HasIndex(x => new { x.CalendarSourceId, x.IcsUid, x.RecurrenceId }).IsUnique();
+            e.HasOne(x => x.CalendarSource).WithMany().HasForeignKey(x => x.CalendarSourceId);
+            e.HasQueryFilter(x => x.CalendarSource.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Locatie>(e =>
+        modelBuilder.Entity<Location>(e =>
         {
-            e.ToTable("locatie");
+            e.ToTable("location");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Evenement>(e =>
+        modelBuilder.Entity<Event>(e =>
         {
-            e.ToTable("evenement");
+            e.ToTable("event");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.Status).HasConversion<string>();
-            e.Property(x => x.Bron).HasConversion<string>();
+            e.Property(x => x.Source).HasConversion<string>();
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
-            e.HasOne(x => x.Evenementtype).WithMany().HasForeignKey(x => x.EvenementtypeId)
+            e.HasOne(x => x.EventType).WithMany().HasForeignKey(x => x.EventTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(x => x.KandidaatEvenement).WithMany().HasForeignKey(x => x.KandidaatEvenementId)
+            e.HasOne(x => x.CandidateEvent).WithMany().HasForeignKey(x => x.CandidateEventId)
                 .OnDelete(DeleteBehavior.SetNull);
-            e.HasOne(x => x.Locatie).WithMany().HasForeignKey(x => x.LocatieId)
+            e.HasOne(x => x.Location).WithMany().HasForeignKey(x => x.LocationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // evenement_lezen/invoegen/wijzigen/verwijderen in het RLS-script vervangen
-            // de standaard tenant-policy; hier alleen de eigenaar-tenant, gasttoegang
-            // is databasekant (RLS) geregeld en wordt bewust niet in EF gedupliceerd.
+            // evenement_lezen/invoegen/wijzigen/verwijderen in the RLS script replace
+            // the standard tenant policy; only the owner tenant here, guest access
+            // is handled database-side (RLS) and deliberately not duplicated in EF.
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<AgendaAfwijking>(e =>
+        modelBuilder.Entity<CalendarMismatch>(e =>
         {
-            e.ToTable("agenda_afwijking");
+            e.ToTable("calendar_mismatch");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.Soort).HasConversion<string>();
-            e.HasOne(x => x.Evenement).WithMany().HasForeignKey(x => x.EvenementId);
-            e.HasQueryFilter(x => x.Evenement.TenantId == _tenantContext.TenantId);
+            e.Property(x => x.Kind).HasConversion<string>();
+            e.HasOne(x => x.Event).WithMany().HasForeignKey(x => x.EventId);
+            e.HasQueryFilter(x => x.Event.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<EvenementGasttenant>(e =>
+        modelBuilder.Entity<EventGuestTenant>(e =>
         {
-            e.ToTable("evenement_gasttenant");
-            e.HasKey(x => new { x.EvenementId, x.TenantId });
+            e.ToTable("event_guest_tenant");
+            e.HasKey(x => new { x.EventId, x.TenantId });
             e.Property(x => x.Status).HasConversion<string>();
-            e.HasOne(x => x.Evenement).WithMany().HasForeignKey(x => x.EvenementId);
+            e.HasOne(x => x.Event).WithMany().HasForeignKey(x => x.EventId);
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
 
-            // Zichtbaarheid (eigenaar én genodigde gast) staat in de RLS-policy;
-            // hier geen filter zodat een gast zijn eigen uitnodigingsrij ziet.
+            // Visibility (owner and invited guest) lives in the RLS policy;
+            // no filter here so a guest sees their own invite row.
         });
 
-        // --- Rooster ----------------------------------------------------------
+        // --- Roster ----------------------------------------------------------
 
-        modelBuilder.Entity<Dienst>(e =>
+        modelBuilder.Entity<Shift>(e =>
         {
-            e.ToTable("dienst");
+            e.ToTable("shift");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.HasOne(x => x.Evenement).WithMany().HasForeignKey(x => x.EvenementId);
-            e.HasOne(x => x.Teamrol).WithMany().HasForeignKey(x => x.TeamrolId)
+            e.HasOne(x => x.Event).WithMany().HasForeignKey(x => x.EventId);
+            e.HasOne(x => x.TeamRole).WithMany().HasForeignKey(x => x.TeamRoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // De RLS-policy laat elke tenant die het evenement ziet ook de dienst
-            // lezen (ook gasttenants); dat filteren we hier bewust niet na.
+            // The RLS policy lets any tenant that can see the event also read
+            // the shift (guest tenants included); deliberately not re-filtered here.
         });
 
-        modelBuilder.Entity<Toewijzing>(e =>
+        modelBuilder.Entity<Assignment>(e =>
         {
-            e.ToTable("toewijzing");
+            e.ToTable("assignment");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.Property(x => x.Status).HasConversion<string>();
-            e.Property(x => x.WaarschuwingenBijToewijzing).HasColumnType("jsonb");
-            e.HasOne(x => x.Dienst).WithMany().HasForeignKey(x => x.DienstId);
-            e.HasOne(x => x.Persoon).WithMany().HasForeignKey(x => x.PersoonId)
+            e.Property(x => x.WarningsAtAssignment).HasColumnType("jsonb");
+            e.HasOne(x => x.Shift).WithMany().HasForeignKey(x => x.ShiftId);
+            e.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId)
                 .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(x => x.ToegewezenDoorPersoon).WithMany()
-                .HasForeignKey(x => x.ToegewezenDoor)
+            e.HasOne(x => x.AssignedByPerson).WithMany()
+                .HasForeignKey(x => x.AssignedBy)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<Ruilverzoek>(e =>
+        modelBuilder.Entity<SwapRequest>(e =>
         {
-            e.ToTable("ruilverzoek");
+            e.ToTable("swap_request");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.Soort).HasConversion<string>();
+            e.Property(x => x.Kind).HasConversion<string>();
             e.Property(x => x.Status).HasConversion<string>();
-            e.HasOne(x => x.Dienst).WithMany().HasForeignKey(x => x.DienstId);
-            e.HasOne(x => x.Toewijzing).WithMany().HasForeignKey(x => x.ToewijzingId)
+            e.HasOne(x => x.Shift).WithMany().HasForeignKey(x => x.ShiftId);
+            e.HasOne(x => x.Assignment).WithMany().HasForeignKey(x => x.AssignmentId)
                 .OnDelete(DeleteBehavior.SetNull);
-            e.HasOne(x => x.AangevraagdDoorPersoon).WithMany()
-                .HasForeignKey(x => x.AangevraagdDoorPersoonId)
+            e.HasOne(x => x.RequestedByPerson).WithMany()
+                .HasForeignKey(x => x.RequestedByPersonId)
                 .OnDelete(DeleteBehavior.Restrict);
-            e.HasOne(x => x.DoelPersoon).WithMany()
-                .HasForeignKey(x => x.DoelPersoonId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        modelBuilder.Entity<Checkin>(e =>
-        {
-            e.ToTable("checkin");
-            e.HasKey(x => x.Id);
-            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.Methode).HasConversion<string>();
-            e.HasOne(x => x.Toewijzing).WithMany().HasForeignKey(x => x.ToewijzingId);
-            e.HasOne(x => x.DoorPersoon).WithMany()
-                .HasForeignKey(x => x.DoorPersoonId)
+            e.HasOne(x => x.TargetPerson).WithMany()
+                .HasForeignKey(x => x.TargetPersonId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // --- Informatielaag -----------------------------------------------------
-
-        modelBuilder.Entity<Richtlijn>(e =>
+        modelBuilder.Entity<CheckIn>(e =>
         {
-            e.ToTable("richtlijn");
+            e.ToTable("check_in");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.Zichtbaarheid).HasConversion<string>();
-            e.Property(x => x.Soort).HasConversion<string>();
+            e.Property(x => x.Method).HasConversion<string>();
+            e.HasOne(x => x.Assignment).WithMany().HasForeignKey(x => x.AssignmentId);
+            e.HasOne(x => x.ByPerson).WithMany()
+                .HasForeignKey(x => x.ByPersonId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // --- Information layer -----------------------------------------------------
+
+        modelBuilder.Entity<Guideline>(e =>
+        {
+            e.ToTable("guideline");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
+            e.Property(x => x.Visibility).HasConversion<string>();
+            e.Property(x => x.Kind).HasConversion<string>();
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
-            e.HasOne(x => x.BijgewerktDoorPersoon).WithMany()
-                .HasForeignKey(x => x.BijgewerktDoor)
+            e.HasOne(x => x.UpdatedByPerson).WithMany()
+                .HasForeignKey(x => x.UpdatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
@@ -330,14 +342,14 @@ public sealed class BccSafetyDbContext : DbContext
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Aandachtspunt>(e =>
+        modelBuilder.Entity<Advisory>(e =>
         {
-            e.ToTable("aandachtspunt");
+            e.ToTable("advisory");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
-            e.HasOne(x => x.Evenementtype).WithMany()
-                .HasForeignKey(x => x.EvenementtypeId)
+            e.HasOne(x => x.EventType).WithMany()
+                .HasForeignKey(x => x.EventTypeId)
                 .OnDelete(DeleteBehavior.SetNull);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
@@ -351,31 +363,31 @@ public sealed class BccSafetyDbContext : DbContext
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        // --- Techniek -------------------------------------------------------------
+        // --- Technical -------------------------------------------------------------
 
-        modelBuilder.Entity<Notificatie>(e =>
+        modelBuilder.Entity<Notification>(e =>
         {
-            e.ToTable("notificatie");
+            e.ToTable("notification");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.Kanaal).HasConversion<string>();
+            e.Property(x => x.Channel).HasConversion<string>();
             e.HasIndex(x => x.IdempotencyKey).IsUnique();
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
-            e.HasOne(x => x.Persoon).WithMany().HasForeignKey(x => x.PersoonId)
+            e.HasOne(x => x.Person).WithMany().HasForeignKey(x => x.PersonId)
                 .OnDelete(DeleteBehavior.Restrict);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });
 
-        modelBuilder.Entity<Auditlog>(e =>
+        modelBuilder.Entity<AuditLog>(e =>
         {
-            e.ToTable("auditlog");
+            e.ToTable("audit_log");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).HasDefaultValueSql("gen_random_uuid()");
-            e.Property(x => x.OudeWaarde).HasColumnType("jsonb");
-            e.Property(x => x.NieuweWaarde).HasColumnType("jsonb");
+            e.Property(x => x.OldValue).HasColumnType("jsonb");
+            e.Property(x => x.NewValue).HasColumnType("jsonb");
             e.HasOne(x => x.Tenant).WithMany().HasForeignKey(x => x.TenantId);
-            e.HasOne(x => x.ActorPersoon).WithMany()
-                .HasForeignKey(x => x.ActorPersoonId)
+            e.HasOne(x => x.ActorPerson).WithMany()
+                .HasForeignKey(x => x.ActorPersonId)
                 .OnDelete(DeleteBehavior.Restrict);
             e.HasQueryFilter(x => x.TenantId == _tenantContext.TenantId);
         });

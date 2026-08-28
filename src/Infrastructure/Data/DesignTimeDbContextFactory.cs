@@ -5,8 +5,8 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace BccSafety.Infrastructure.Data;
 
 /// <summary>
-/// Alleen voor `dotnet ef migrations add`. Er wordt geen verbinding
-/// gemaakt, dus deze connectiestring hoeft nergens echt te bestaan.
+/// Only for `dotnet ef migrations add`. No connection is ever made, so
+/// this connection string doesn't need to point anywhere real.
 /// </summary>
 public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<BccSafetyDbContext>
 {

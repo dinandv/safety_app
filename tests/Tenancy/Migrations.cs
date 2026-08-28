@@ -4,11 +4,11 @@ using Npgsql;
 namespace BccSafety.Tests.Tenancy;
 
 /// <summary>
-/// Dunne verbinding tussen de isolatietest en TenancyMigrator: schema
-/// migreren plus db/001_tenancy_rls.sql toepassen, op een verbinding met
-/// eigenaarsrechten. Het wachtwoord van bcc_app komt uit de secret store en
-/// staat dus niet in het SQL-script; hier, in testcode tegen een
-/// wegwerpcontainer, zetten we het expliciet zodat de test ermee kan inloggen.
+/// Thin link between the isolation test and TenancyMigrator: migrate the
+/// schema and apply db/001_tenancy_rls.sql, on a connection with owner
+/// rights. bcc_app's password comes from the secret store and so isn't in
+/// the SQL script; here, in test code against a throwaway container, we
+/// set it explicitly so the test can log in with it.
 /// </summary>
 internal static class Migrations
 {

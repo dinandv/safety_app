@@ -5,11 +5,11 @@ using Npgsql;
 namespace BccSafety.Infrastructure.Data;
 
 /// <summary>
-/// Brengt het schema naar de huidige staat en zet daarna de RLS-policies
-/// uit db/001_tenancy_rls.sql erop. Moet draaien op een verbinding met
-/// eigenaarsrechten (bcc_owner), nooit met bcc_app — anders staan de
-/// policies er straks wel maar heeft de rol die ze aanmaakt zelf
-/// BYPASSRLS-achtige rechten via het eigenaarschap.
+/// Brings the schema up to date and then applies the RLS policies from
+/// db/001_tenancy_rls.sql. Must run on a connection with owner rights
+/// (bcc_owner), never with bcc_app — otherwise the policies would exist,
+/// but the role creating them would itself have BYPASSRLS-like rights
+/// through ownership.
 /// </summary>
 public static class TenancyMigrator
 {
@@ -36,8 +36,8 @@ public static class TenancyMigrator
         const string resourceName = "BccSafety.Infrastructure.Sql.001_tenancy_rls.sql";
         using var stream = assembly.GetManifestResourceStream(resourceName)
             ?? throw new InvalidOperationException(
-                $"Embedded resource '{resourceName}' niet gevonden. " +
-                $"Beschikbaar: {string.Join(", ", assembly.GetManifestResourceNames())}");
+                $"Embedded resource '{resourceName}' not found. " +
+                $"Available: {string.Join(", ", assembly.GetManifestResourceNames())}");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }

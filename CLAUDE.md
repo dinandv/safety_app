@@ -94,22 +94,32 @@ volledige deelnemerslijst, geen geboortedata.
 
 ## Stand van zaken
 
-Er staat nog geen applicatiecode. Wat er ligt:
+Issues 1 t/m 3 zijn gedaan. Wat er ligt:
 
-- `db/001_tenancy_rls.sql` — rollen, tenant-context en alle policies
+- `db/001_tenancy_rls.sql` — rollen, tenant-context en alle policies,
+  inclusief de `__EFMigrationsHistory`-uitzondering (issue 2) en de
+  gedenormaliseerde `event_guest_tenant.owner_tenant_id` die een
+  cirkelverwijzing tussen `event` en `event_guest_tenant` voorkomt
+- `src/Infrastructure/Entities/` — alle EF Core-entiteiten uit dit
+  document, plus de migratie in `src/Infrastructure/Migrations/`
 - `src/Infrastructure/Tenancy/` — de connectie-interceptor
-- `tests/Tenancy/` — de isolatietest. `Migrations.ApplyAsync` is nog een
-  haakje en moet ingevuld worden zodra het schema er is
-- `deploy/` — Compose, Caddy en het runbook
+- `src/Api/` — magic-link login (code + link, 90 dagen sessie),
+  dienstacties zonder inloggen (bevestigen/afmelden — ruilen volgt in een
+  latere issue), tenant-resolutie uit het subdomein
+- `tests/Tenancy/` — de isolatietest
+- `deploy/` — Compose, Caddy, `Dockerfile.api` en het runbook
 
-Begin bij issue 1 (entiteiten en migraties). Issue 2 hoort daar direct
-achteraan: de dekkingstest gaat falen op `__EFMigrationsHistory` en die
-moet je uitzonderen, niet uitzetten.
+Verder bouwen op een al compleet schema: volgende issue is 4 (ICS-import).
 
 ## Werkwijze
 
 - Lokaal ontwikkelen. De server komt pas bij deploy in beeld.
-- Nederlandse namen in het datamodel, Engelse commitberichten.
+- **Taal: alle software in het Engels, alle documentatie in het
+  Nederlands.** Code, paden, klassen, methoden, tabel- en kolomnamen,
+  commitberichten — Engels. `docs/*.md`, dit bestand, en de Nederlandse
+  vaktermen die de opdrachtgever gebruikt (issues, gesprekken) — Nederlands.
+  Geen mengvormen: geen Nederlandse mapnamen in `src/`, geen Engelse
+  kolomnamen die niet overeenkomen met wat hier gedocumenteerd staat.
 - Kleine commits per issue, met het issuenummer erin.
 - Draai de isolatietest voordat je iets aan tenancy of policies raakt.
 - Twijfel je of iets in de publieke repo mag: dan mag het niet. Vraag het.

@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 namespace BccSafety.Infrastructure.Tenancy;
 
 /// <summary>
-/// De tenant van de huidige request. Wordt gevuld door middleware op basis
-/// van het subdomein of de ingelogde gebruiker, nooit op basis van iets dat
-/// de client zelf meestuurt.
+/// The tenant of the current request. Populated by middleware based on
+/// the subdomain or the logged-in user, never based on anything the
+/// client sends itself.
 /// </summary>
 public interface ITenantContext
 {
@@ -21,23 +21,23 @@ public sealed class TenantContext : ITenantContext
     {
         if (TenantId is not null && TenantId != tenantId)
             throw new InvalidOperationException(
-                "De tenant van een request mag niet halverwege wijzigen.");
+                "A request's tenant must not change halfway through.");
         TenantId = tenantId;
     }
 }
 
 /// <summary>
-/// Zet app.tenant_id op elke fysieke verbinding die uit de pool komt, en
-/// wist hem weer bij teruggave.
+/// Sets app.tenant_id on every physical connection that comes out of the
+/// pool, and clears it again on return.
 ///
-/// Waarom niet SET LOCAL: dat vereist een expliciete transactie, en EF
-/// draait leesqueries daar niet in. set_config met is_local = false zet de
-/// waarde op sessieniveau; Npgsql stuurt bij teruggave standaard DISCARD
-/// ALL, maar daar leunen we niet op — we wissen zelf.
+/// Why not SET LOCAL: that requires an explicit transaction, and EF
+/// doesn't run read queries in one. set_config with is_local = false sets
+/// the value at session level; Npgsql sends DISCARD ALL by default on
+/// return, but we don't rely on that — we clear it ourselves.
 ///
-/// Waarom dit veilig is als het tóch misgaat: app.current_tenant() geeft
-/// NULL bij een lege waarde, en elke policy vergelijkt daarmee. Een
-/// verbinding zonder tenant ziet dus niets in plaats van alles.
+/// Why this is safe if it does go wrong: app.current_tenant() returns
+/// NULL for an empty value, and every policy compares against that. A
+/// connection without a tenant sees nothing instead of everything.
 /// </summary>
 public sealed class TenantConnectionInterceptor : DbConnectionInterceptor
 {
