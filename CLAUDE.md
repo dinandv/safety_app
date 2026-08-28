@@ -94,7 +94,8 @@ volledige deelnemerslijst, geen geboortedata.
 
 ## Stand van zaken
 
-Issues 1 t/m 3 zijn gedaan. Wat er ligt:
+Issues 1 t/m 3 zijn gedaan, plus het dagoverzicht (issue 8) en de
+contactkaart (issue 9). Wat er ligt:
 
 - `db/001_tenancy_rls.sql` — rollen, tenant-context en alle policies,
   inclusief de `__EFMigrationsHistory`-uitzondering (issue 2) en de
@@ -107,9 +108,35 @@ Issues 1 t/m 3 zijn gedaan. Wat er ligt:
   dienstacties zonder inloggen (bevestigen/afmelden — ruilen volgt in een
   latere issue), tenant-resolutie uit het subdomein
 - `tests/Tenancy/` — de isolatietest
-- `deploy/` — Compose, Caddy, `Dockerfile.api` en het runbook
+- `src/App/` — de deelnemer-PWA in Angular: het dagoverzicht met alle
+  toestanden, mijn diensten, open oproepen, de informatietab en het
+  inlogscherm. Designtokens en UI-kit in `src/App/src/styles/` en
+  `src/App/src/app/ui/`. Zie `src/App/README.md`
+- `tests/Participant/` — de zichtbaarheidsregel voor telefoonnummers en
+  de naamopmaak
+- `deploy/` — Compose, Caddy, `Dockerfile.api` en het runbook. De
+  frontend wordt in dezelfde image gebouwd en door de API als statische
+  bestanden geserveerd: één origin, geen CORS
 
 Verder bouwen op een al compleet schema: volgende issue is 4 (ICS-import).
+
+## De frontend
+
+Nederlands is wat de deelnemer leest, Engels is alles daaromheen —
+inclusief de routes (`/today`, `/open-calls`) en de CSS-custom-properties.
+De designtokens uit het design system zijn daarom vertaald: `--hesje-kleur-groen`
+daar is `--vest-green` hier. Waardes zijn ongewijzigd, dus een ontwerp en
+een scherm blijven token voor token vergelijkbaar.
+
+De API stuurt feiten, geen zinnen. Een reden-enum, een aantal, een
+hesjekleur; elk woord dat een vrijwilliger leest staat in de frontend. Dat
+scheelt een tweede plek waar toon en terminologie kunnen gaan schuiven.
+
+Offline is twee lagen: de service worker cachet de app zelf, `CachedResource`
+bewaart het laatste antwoord van elke GET in `localStorage`. Alleen een
+onbereikbare server valt terug op die kopie, en altijd met het tijdstip
+erbij. Een antwoord van de server — ook een 500 — is een echte fout.
+Uitloggen wist de cache; daar staan telefoonnummers in.
 
 ## Werkwijze
 

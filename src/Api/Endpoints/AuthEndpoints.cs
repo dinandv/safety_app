@@ -27,6 +27,7 @@ public static class AuthEndpoints
 
     private static async Task<IResult> RequestAsync(
         RequestBody request,
+        HttpContext http,
         BccSafetyDbContext db,
         ActionTokenService tokens,
         IEmailSender email,
@@ -40,10 +41,26 @@ public static class AuthEndpoints
         if (person is not null)
         {
             var code = await tokens.IssueLoginCodeAsync(person.Id, ct);
+
+            // Code and link, both for the same 15 minutes. The link is
+            // what most people use — it opens the PWA and signs them in
+            // without typing anything — but a link is easy to break in
+            // transit, so the code stays as the way that always works.
+            //
+            // The host comes from what Caddy matched, never from a
+            // client-supplied header: the link must point at this
+            // tenant's own subdomain and no other.
+            var host = http.Request.Headers["X-Forwarded-Host"].FirstOrDefault()
+                ?? http.Request.Host.Value;
+            var link = $"https://{host}/login" +
+                $"?email={Uri.EscapeDataString(person.Email)}&code={Uri.EscapeDataString(code)}";
+
             await email.SendAsync(
                 person.Email,
-                "Your login code",
-                $"Your code is {code}. It's valid for 15 minutes and can be used once.",
+                "Je inlogcode",
+                $"Je code is {code}. Hij is een kwartier geldig en werkt één keer." +
+                Environment.NewLine + Environment.NewLine +
+                $"Of open meteen de app: {link}",
                 ct);
         }
 

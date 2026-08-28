@@ -1,0 +1,196 @@
+/* Design tokens for the participant PWA.
+ *
+ * Ported from the Claude Design system for this project. The names are
+ * English here, unlike in the design source: identifiers in this repo are
+ * English throughout, and a CSS custom property is an identifier. The
+ * values are unchanged, so a design and a screen still line up token for
+ * token: --hesje-kleur-groen there is --vest-green here.
+ *
+ * The brand colours come from the safety-vest icon; the three signal
+ * families come from the safety context itself. */
+
+:root {
+  /* Brand — the three colours of the vest icon */
+  --brand-yellow: #fcfb65;
+  --brand-orange: #eb7421;
+  --brand-brown: #994308;
+
+  /* Warm neutrals — paper to ink */
+  --warm-0: #fffefb;
+  --warm-50: #faf8f2;
+  --warm-100: #f3f0e7;
+  --warm-200: #e8e3d6;
+  --warm-300: #d6cfbe;
+  --warm-400: #b3aa95;
+  --warm-500: #8c8371;
+  --warm-600: #6a6254;
+  --warm-700: #4a443a;
+  --warm-800: #2c2823;
+  --warm-900: #1a1714;
+
+  /* Signal colours */
+  --signal-orange-700: #b4520f;
+  --signal-orange-600: #d2620f;
+  --signal-orange-500: #eb7421;
+  --signal-orange-200: #f8d5b4;
+  --signal-orange-50: #fdf0e3;
+
+  --green-700: #1e5c3f;
+  --green-500: #2e8055;
+  --green-200: #bfe0cd;
+  --green-50: #ebf5ef;
+
+  --amber-700: #8a5b08;
+  --amber-500: #c4870f;
+  --amber-200: #f2dfae;
+  --amber-50: #fbf3e0;
+
+  --red-700: #8e2419;
+  --red-500: #bc3626;
+  --red-200: #f1c8c2;
+  --red-50: #fbedeb;
+
+  --blue-700: #1b4b72;
+  --blue-500: #2c6e9e;
+  --blue-200: #c3daea;
+  --blue-50: #edf4f9;
+
+  /* Vest colours — team_role.vest_color. The recognition point on site,
+   * so the interface uses the same colour the person is wearing. */
+  --vest-red: #bc3626;
+  --vest-orange: #eb7421;
+  --vest-yellow: #e8d520;
+  --vest-green: #2e8055;
+  --vest-blue: #2c6e9e;
+  --vest-white: #fffefb;
+
+  /* Semantic aliases */
+  --surface-page: var(--warm-50);
+  --surface-card: var(--warm-0);
+  --surface-sunken: var(--warm-100);
+  --surface-inverse: var(--warm-900);
+  --surface-accent: var(--signal-orange-50);
+  --surface-hover: var(--warm-100);
+  --surface-selected: var(--signal-orange-50);
+
+  --text-body: var(--warm-800);
+  --text-heading: var(--warm-900);
+  --text-muted: var(--warm-600);
+  --text-faint: var(--warm-500);
+  --text-inverse: var(--warm-0);
+  --text-accent: var(--signal-orange-700);
+  --text-link: var(--signal-orange-700);
+  --text-link-hover: var(--signal-orange-600);
+
+  --border-hairline: var(--warm-200);
+  --border-strong: var(--warm-300);
+  --border-focus: var(--warm-900);
+
+  --action-primary: var(--warm-900);
+  --action-primary-hover: var(--warm-800);
+  --action-accent: var(--signal-orange-500);
+  --action-accent-hover: var(--signal-orange-600);
+  --action-disabled: var(--warm-200);
+
+  --status-filled: var(--green-500);
+  --status-gap: var(--red-500);
+  --status-warning: var(--amber-500);
+  --status-info: var(--blue-500);
+  --status-draft: var(--warm-500);
+
+  --focus-ring: 0 0 0 2px var(--warm-0), 0 0 0 4px var(--warm-900);
+
+  /* Type */
+  --font-sans:
+    'Schibsted Grotesk Variable', 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-serif: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --font-display: var(--font-serif);
+  --font-ui: var(--font-sans);
+  --font-body: var(--font-sans);
+  --font-data: var(--font-mono);
+
+  --text-display-1: 44px;
+  --text-display-2: 34px;
+  --text-title-1: 26px;
+  --text-title-2: 21px;
+  --text-title-3: 17px;
+  --text-body-lg: 17px;
+  --text-body-md: 15px;
+  --text-body-sm: 13.5px;
+  --text-label: 12.5px;
+  --text-micro: 11px;
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --tracking-display: -0.02em;
+  --tracking-normal: 0;
+  --tracking-label: 0.06em;
+
+  /* Space — 4px base */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --gutter-screen: 20px;
+  --gutter-card: 18px;
+  --stack-tight: 8px;
+  --stack-default: 16px;
+  --stack-section: 32px;
+
+  /* Anything you tap with a glove on, or in a hurry. */
+  --hit-min: 44px;
+  --content-max: 720px;
+  --sidebar-w: 248px;
+
+  /* Radius and shadow */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --shadow-none: none;
+  --shadow-card: 0 1px 2px rgba(26, 23, 20, 0.05);
+  --shadow-raised: 0 2px 6px rgba(26, 23, 20, 0.07), 0 1px 2px rgba(26, 23, 20, 0.05);
+  --shadow-overlay: 0 12px 32px rgba(26, 23, 20, 0.16), 0 2px 8px rgba(26, 23, 20, 0.08);
+  --shadow-inset-sunken: inset 0 1px 2px rgba(26, 23, 20, 0.06);
+
+  --border-width-hair: 1px;
+  --border-width-marker: 3px;
+
+  /* Motion — one easing, no bounce */
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --duration-instant: 80ms;
+  --duration-fast: 140ms;
+  --duration-normal: 220ms;
+  --duration-slow: 360ms;
+  --press-scale: 0.98;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --press-scale: 1;
+  }
+}

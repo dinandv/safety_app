@@ -135,8 +135,9 @@ public static class TodayEndpoints
             .ToListAsync(ct);
 
         var own = assignments.FirstOrDefault(a => a.PersonId == personId);
-        var showPhones = PhoneVisibility.IsVisible(
+        var phones = PhoneVisibility.Evaluate(
             own is not null, todaysEvent.Start, todaysEvent.End, now);
+        var showPhones = phones == PhoneVisibilityState.Visible;
 
         var groups = shifts.Select(shift =>
         {
@@ -199,7 +200,7 @@ public static class TodayEndpoints
                 todaysEvent.LocationName,
                 groups.Sum(g => g.People.Count),
                 groups.Sum(g => g.RequiredCount),
-                showPhones,
+                phones,
                 advisories,
                 ownShift,
                 groups),

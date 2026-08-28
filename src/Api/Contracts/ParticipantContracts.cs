@@ -24,7 +24,7 @@ public sealed record TodayEvent(
     string LocationName,
     int FilledCount,
     int RequiredCount,
-    bool PhoneNumbersVisible,
+    PhoneVisibilityState PhoneNumbers,
     IReadOnlyList<AdvisoryNote> Advisories,
     OwnShift? OwnShift,
     IReadOnlyList<RoleGroup> RoleGroups);
@@ -34,6 +34,23 @@ public sealed record UpcomingEvent(
     string Title,
     DateTimeOffset Start,
     DateTimeOffset End);
+
+/// <summary>
+/// Why phone numbers are, or are not, on the screen. The interface needs
+/// the reason and not just the verdict: "you are not on this duty" and
+/// "the duty has not started yet" are different sentences, and telling
+/// someone the wrong one makes the rule look arbitrary.
+/// </summary>
+public enum PhoneVisibilityState
+{
+    Visible,
+
+    /// <summary>The caller has no shift on today's event.</summary>
+    NotScheduled,
+
+    /// <summary>The caller is scheduled, but the event is not close enough yet.</summary>
+    OutsideShiftWindow,
+}
 
 public sealed record AdvisoryNote(Guid Id, string Title, string Text);
 

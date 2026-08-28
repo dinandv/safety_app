@@ -1,0 +1,146 @@
+:host {
+  display: block;
+}
+
+header h2 {
+  margin-top: 6px;
+  font-size: var(--text-title-1);
+}
+
+.when {
+  margin-top: 4px;
+  font-size: var(--text-body-sm);
+}
+
+.status-line {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.next {
+  max-width: 36ch;
+}
+
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-hairline);
+  border-left: var(--border-width-marker) solid var(--warm-300);
+  border-radius: var(--radius-md);
+  padding: var(--gutter-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-card);
+}
+
+/* Your own shift, marked and at the top of the roster. It uses the
+   accent surface rather than a card so it reads as "this one is about
+   you" before any of the words do. */
+.own {
+  background: var(--surface-selected);
+  border: 1px solid var(--signal-orange-200);
+  border-left: var(--border-width-marker) solid var(--warm-300);
+  border-radius: var(--radius-md);
+  padding: var(--gutter-card);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.own-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.own-head .accent {
+  color: var(--text-accent);
+}
+
+.own-line {
+  font-size: var(--text-body-md);
+  color: var(--text-heading);
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.people {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.people > li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--hit-min);
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--warm-100);
+}
+
+.people > li:first-child {
+  border-top: none;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--warm-100);
+  color: var(--warm-700);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-body-md);
+  color: var(--text-heading);
+}
+
+.self {
+  font-size: var(--text-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-label);
+  color: var(--text-accent);
+}
+
+/* An unfilled spot is a row, not a missing row. */
+.people > li.gap {
+  margin-top: var(--space-1);
+  padding: var(--space-2) 10px;
+  border: 1px dashed var(--red-200);
+  border-radius: var(--radius-sm);
+  background: var(--red-50);
+}
+
+.footnote {
+  margin-bottom: var(--space-2);
+  line-height: var(--leading-normal);
+}

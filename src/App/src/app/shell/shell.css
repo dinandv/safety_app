@@ -1,0 +1,56 @@
+:host {
+  --tab-bar-height: calc(58px + env(safe-area-inset-bottom, 0px));
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--surface-page);
+}
+
+main {
+  flex: 1;
+  min-height: 0;
+  padding: var(--gutter-screen);
+  padding-bottom: calc(var(--tab-bar-height) + var(--space-6));
+  max-width: var(--content-max);
+  width: 100%;
+  margin: 0 auto;
+}
+
+nav {
+  position: fixed;
+  inset: auto 0 0 0;
+  display: flex;
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-hairline);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 10;
+}
+
+nav a {
+  flex: 1;
+  min-height: var(--hit-min);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 0;
+  font-size: var(--text-micro);
+  color: var(--text-muted);
+  font-weight: var(--weight-regular);
+}
+
+nav a.active {
+  color: var(--text-accent);
+  font-weight: var(--weight-medium);
+}
+
+/* Wide screens are the same design with more air, per the design
+   system. The planner's period view is the one deliberate exception,
+   and it does not live in this shell. */
+@media (min-width: 768px) {
+  main {
+    padding-inline: var(--space-8);
+  }
+}
